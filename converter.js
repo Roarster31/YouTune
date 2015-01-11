@@ -13,11 +13,23 @@ var DEBUG = true;
 
 var filesArray = [];
 
+fs.exists('/audioFiles', function (exists) {
+  if(exists){
+    console.log("exists");
+    populateFileArray();
+  }else{
+    fs.mkdir('audioFiles', populateFileArray);
+    fs.mkdir('imageFiles', function(){});
+  }
+});
+
+function populateFileArray () {
 //we need to populate the files array with all existing files, we'll do this asynchonously
 fs.readdir("audioFiles/", function(err, files) {
     filesArray = filesArray.concat(files);
     console.log(filesArray);
 });
+}
 
 function sendAudioFile(videoId, response) {
 
