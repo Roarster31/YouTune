@@ -9,7 +9,7 @@ var ffmetadata = require('./metadata');
 
 
 
-var DEBUG = true;
+var DEBUG = false;
 
 var filesArray = [];
 
