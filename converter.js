@@ -72,90 +72,6 @@ function addMetaData(metadata, callback) {
         }
     });
 
-    /*
-        var mParams = [
-            '-i', 'audioFiles/' + metadata.videoId + '.mp3',
-            '-loglevel', 'info',
-            //'-acodec', 'copy',
-            //'-vn',
-            //'-y',
-            '-y',
-            '-id3v2_version', '3',
-            '-t', '2',
-            '-metadata:s:v', 'title="Album cover"',
-            '-metadata:s:v', 'comment="Cover (Front)"',
-            'audioFiles/' + metadata.videoId + '_out.mp3'
-        ];
-
-        if (metadata.artwork != undefined) {
-            console.log('writing artwork data');
-
-
-            mParams.splice(2, 0, '1');
-            mParams.splice(2, 0, '-map');
-
-            mParams.splice(2, 0, '0');
-            mParams.splice(2, 0, '-map');
-
-            mParams.splice(2, 0, 'copy');
-            mParams.splice(2, 0, '-c');
-
-            mParams.splice(2, 0, metadata.artwork);
-            mParams.splice(2, 0, '-i');
-        }
-
-        if (metadata.artist != undefined) {
-            console.log('writing artist data');
-            mParams.splice(mParams.length - 1, 0, '-metadata');
-            mParams.splice(mParams.length - 1, 0, 'artist=' + metadata.artist);
-        }
-
-        if (metadata.title != undefined) {
-            console.log('writing title data');
-            mParams.splice(mParams.length - 1, 0, '-metadata');
-            mParams.splice(mParams.length - 1, 0, 'title=' + metadata.title);
-        }
-        console.log(mParams.join(' '));
-        var stream = avconv(mParams);
-
-        stream.on('message', function(data) {
-            process.stdout.write(data);
-
-        });
-
-
-        stream.on('exit', function() {
-            console.log('metadata added');
-
-
-
-            var options = {
-                attachments: [metadata.artwork],
-            };
-            ffmetadata.write('audioFiles/' + metadata.videoId + '_out.mp3', {}, options, function(err) {
-                if (err) {
-                    console.error("Error writing cover art");
-                } else {
-                    console.log('artwork added');
-                    fs.unlink('audioFiles/' + metadata.videoId + '.mp3', function(err) {
-                        if (err) throw err;
-                        console.log('successfully deleted audioFiles/' + metadata.videoId + '.mp3');
-
-                        fs.rename('audioFiles/' + metadata.videoId + '_out.mp3', 'audioFiles/' + metadata.videoId + '.mp3', function(err) {
-
-                            callback();
-
-                        });
-                    });
-
-
-                }
-            });
-
-
-
-        });
-    */
 }
 
 
@@ -271,12 +187,7 @@ http.createServer(function(request, response) {
             transcoder = ffmpeg(inputStream);
         }
         transcoder
-        // .inputOptions('-id3v2_version 3')
-        // .inputOptions('-write_id3v1 1')
-        // .inputOptions('-f mp3')
             .noVideo()
-            // .audioBitrate(192)
-            // .inputOptions('-c:a libmp3lame')
             .save('audioFiles/' + videoId + '.mp3');
 
         transcoder.on('start', function(commandLine) {
@@ -304,97 +215,6 @@ http.createServer(function(request, response) {
         });
 
 
-        /* 
-
-var stream = avconv(params);
-
-req("http://i2.ytimg.com/vi/"+videoId+"/hqdefault.jpg").pipe(fs.createWriteStream("imageFiles/"+videoId+".jpg"));
-
-var data = {};
-
-ytdl('http://www.youtube.com/watch?v='+videoId, { quality: 'lowest', filter: function(format) { return format.container === 'mp4'; } })
-.on('info', function(Info, Format)
-{
-//console.log(Format.audioBitrate);
-
-//var contentLength = Format.audioBitrate*1000*parseInt(Info.length_seconds);
-//console.log(contentLength);
-
-data = {
-title: Info.title,
-artist: Info.author
-}
-
-
-})
-.pipe(stream);
-
-stream.pipe(fs.createWriteStream('audioFiles/'+videoId+'.mp3'));
-
-console.log("converting file");
-
-stream.on('message', function(data) {
-    process.stdout.write(data);
-
-});
-
-
-stream.on('exit', function() {
-    console.log('file converted');
-
-    //we need to add the file to the files array for the future
-    filesArray.push(videoId+".mp3");
-    console.log("adding "+videoId+".mp3 to files array");
-
-
-var metadata = [
-    '-i', 'audioFiles/'+videoId+'.mp3',
-    '-loglevel', 'info',
-    '-i', "imageFiles/"+videoId+".jpg",
-    '-c', 'copy',
-    '-y',
-    '-metadata:s:v', 'title="tiiitle"',
-    '-metadata:s:v', 'artist="aaartist"',
-    'audioFiles/'+videoId+'.mp3'
-];
-
-var tagger = avconv(metadata);
-
-tagger.on('message', function(data) {
-    process.stdout.write(data);
-
-});
-
-/*
-   ffmetadata.write("audioFiles/"+videoId+".mp3", data, ["imageFiles/"+videoId+".jpg"], function(err) {
-    if (err){
-console.error("Error writing cover art");
-console.log(err);
-}
-    else console.log("Cover art added");
-});
-
-var readStream = fs.createReadStream(filePath);
-
-
-
-    tagger.on('exit', function() {
-
-
-    var stat = fs.statSync(filePath);
-
-    response.writeHead(200, {
-        'Content-Type': 'audio/mpeg',
-        'Content-Length': stat.size
-    });
-
-
-    readStream.pipe(response);
-});
-
-    console.log("response sent");
-});
-*/
     }
 
 
