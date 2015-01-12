@@ -180,7 +180,7 @@ http.createServer(function(request, response) {
                             console.log("received spotify data");
                             var info = JSON.parse(body);
                             trackDataRetrieved = true;
-                            if (info.tracks.length > 0) {
+                            if (info.tracks.items.length > 0) {
                                 console.log("Found tracks from spotify!");
                                 console.log(info.tracks.items[0].album.images[0].url);
                                 req(info.tracks.items[0].album.images[0].url).pipe(fs.createWriteStream('imageFiles/' + videoId + '.jpg'));
