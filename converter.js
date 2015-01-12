@@ -153,7 +153,14 @@ http.createServer(function(request, response) {
 
             console.log("searching spotify for: " + info.title);
 
-            req('http://developer.echonest.com/api/v4/song/search?api_key=7WFN0LV9VZMGAFZFQ&combined=' + encodeURIComponent(info.title), function(error, response, body) {
+            var artistQuery = '';
+            
+            if(info.title.toLowerCase().indexOf(info.author.toLowerCase()) != -1){
+                artistQuery = '&artist=' + encodeURIComponent(info.author);
+                info.title = info.title.toLowerCase().replace(info.author.toLowerCase(),'');
+            }
+
+            req('http://developer.echonest.com/api/v4/song/search?api_key=7WFN0LV9VZMGAFZFQ&combined=' + encodeURIComponent(info.title) + artistQuery, function(error, response, body) {
                 if (!error && response.statusCode == 200) {
 
                     var songs = JSON.parse(body).response.songs;
@@ -162,7 +169,7 @@ http.createServer(function(request, response) {
                         console.log("Couldn't get any tracks from Echo Nest!");
                         return;
                     }
-
+                    console.log('https://api.spotify.com/v1/search?type=track&limit=1&q=' + encodeURIComponent(songs[0].title));
                     req('https://api.spotify.com/v1/search?type=track&limit=1&q=' + encodeURIComponent(songs[0].title), function(error, response, body) {
                         if (!error && response.statusCode == 200) {
                             console.log("received spotify data");
@@ -178,6 +185,8 @@ http.createServer(function(request, response) {
                                     album: info.tracks.items[0].album.name,
                                     artwork: 'imageFiles/' + videoId + '.jpg'
                                 };
+
+                                console.log(metadata);
 
 
                                 if (fileConverted) {
