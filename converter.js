@@ -207,8 +207,10 @@ http.createServer(function(request, response) {
                         console.log("Couldn't get any tracks from Echo Nest!");
                         return;
                     }
-                    console.log('https://api.spotify.com/v1/search?type=track&limit=1&q=' + encodeURIComponent(songs[0].title));
-                    req('https://api.spotify.com/v1/search?type=track&limit=1&q=' + encodeURIComponent(songs[0].title), function(error, response, body) {
+                    var spotifyUrl = 'https://api.spotify.com/v1/search?type=track&limit=1&q=track:' + encodeURIComponent(songs[0].title) + '+artist:' + encodeURIComponent(songs[0].artist_name);
+                    console.log("searching spotify: "+spotifyUrl);
+
+                    req(spotifyUrl, function(error, response, body) {
                         if (!error && response.statusCode == 200) {
                             console.log("received spotify data");
                             var info = JSON.parse(body);
