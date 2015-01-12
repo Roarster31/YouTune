@@ -151,16 +151,54 @@ http.createServer(function(request, response) {
 
         var youtubeInfo = function onInfo(info, format) {
 
-            console.log("searching spotify for: " + info.title);
+            console.log("searching echonest for: " + info.title);
 
             var artistQuery = '';
 
-            if(info.title.toLowerCase().indexOf(info.author.toLowerCase()) != -1){
-                artistQuery = '&artist=' + encodeURIComponent(info.author);
-                info.title = info.title.toLowerCase().replace(info.author.toLowerCase(),'');
+            if(info.author.toLowerCase().indexOf("vevo") != -1){
+                info.author = info.author.toLowerCase().replace("vevo","");
             }
 
-            req('http://developer.echonest.com/api/v4/song/search?api_key=7WFN0LV9VZMGAFZFQ&results=1&max_duration=' + info.length_seconds + '&combined=' + encodeURIComponent(info.title) + artistQuery, function(error, response, body) {
+            var titleCondensed = info.title.toLowerCase().replace(' ','');
+            var artistCondensed = info.author.toLowerCase().replace(' ','');
+
+            if(titleCondensed.indexOf(artistCondensed) != -1){
+
+                var titleStartIndex = 0;
+                var titleEndIndex = 0;
+                var artistIndex = 0;
+
+                //this looks for the artist inside the title. It doesn't care about spaces but does return
+                //the string with spaces if there were any.
+                for(i=0; i<info.title.length; i++){
+
+                    if(info.title.toLowerCase().charAt(i) == artistCondensed.charAt(artistIndex)){
+                        if(artistIndex == 0){
+                            titleStartIndex = i;
+                        }
+                        artistIndex ++;
+
+                        if(artistIndex == artistCondensed.length){
+                            titleEndIndex = i+1;
+
+                            break;
+                        }
+                    }else if(info.title.charAt(i) != ' '){
+
+                        artistIndex = titleStartIndex = 0;
+                    }
+                }
+
+                var artist = info.title.substring(titleStartIndex, titleEndIndex);
+
+                console.log("artist: "+artist);
+
+                artistQuery = '&artist=' + encodeURIComponent(artist);
+                info.title = info.title.toLowerCase().replace(artist.toLowerCase(),'');
+            }
+            var echoNestUrl = 'http://developer.echonest.com/api/v4/song/search?api_key=7WFN0LV9VZMGAFZFQ&results=1&max_duration=' + info.length_seconds + '&combined=' + encodeURIComponent(info.title) + artistQuery;
+            console.log("searching echonest: "+echoNestUrl);
+            req(echoNestUrl, function(error, response, body) {
                 if (!error && response.statusCode == 200) {
 
                     var songs = JSON.parse(body).response.songs;
