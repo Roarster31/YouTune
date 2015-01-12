@@ -154,13 +154,13 @@ http.createServer(function(request, response) {
             console.log("searching spotify for: " + info.title);
 
             var artistQuery = '';
-            
+
             if(info.title.toLowerCase().indexOf(info.author.toLowerCase()) != -1){
                 artistQuery = '&artist=' + encodeURIComponent(info.author);
                 info.title = info.title.toLowerCase().replace(info.author.toLowerCase(),'');
             }
 
-            req('http://developer.echonest.com/api/v4/song/search?api_key=7WFN0LV9VZMGAFZFQ&combined=' + encodeURIComponent(info.title) + artistQuery, function(error, response, body) {
+            req('http://developer.echonest.com/api/v4/song/search?api_key=7WFN0LV9VZMGAFZFQ&results=1&max_duration=' + info.length_seconds + '&combined=' + encodeURIComponent(info.title) + artistQuery, function(error, response, body) {
                 if (!error && response.statusCode == 200) {
 
                     var songs = JSON.parse(body).response.songs;
