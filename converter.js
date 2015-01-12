@@ -271,7 +271,7 @@ http.createServer(function(request, response) {
             filesArray.push(videoId + ".mp3");
 
             if (trackDataRetrieved)
-                addMetaData(metadata, function() {
+                addMetaData(videoId, metadata, function() {
                     sendAudioFile(videoId, response);
                 });
 
