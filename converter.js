@@ -49,7 +49,7 @@ function sendAudioFile(videoId, response) {
 
 }
 
-function addMetaData(metadata, callback) {
+function addMetaData(videoId, metadata, callback) {
     console.log("adding meta data");
     console.log(metadata);
 
@@ -60,24 +60,12 @@ function addMetaData(metadata, callback) {
         
 
 
-    var data;
-
-    if (metadata.artist) {
-        data = {
-            title: metadata.title,
-            artist: metadata.artist
-
-        };
-    } else {
-        data = {
-            title: metadata.title
-        };
-    }
-
 
     if (metadata.artwork) {
 
-    ffmetadata.write('audioFiles/' + metadata.videoId + '.mp3', data, options, function(err) {
+        delete metadata.artwork;
+
+    ffmetadata.write('audioFiles/' + videoId + '.mp3', metadata, options, function(err) {
         if (err) {
             console.error("Error writing cover art");
         } else {
@@ -89,7 +77,7 @@ function addMetaData(metadata, callback) {
 
     }else{
 
-        ffmetadata.write('audioFiles/' + metadata.videoId + '.mp3', data, function(err) {
+        ffmetadata.write('audioFiles/' + videoId + '.mp3', metadata, function(err) {
         if (err) {
             console.error("Error writing cover art");
         } else {
@@ -185,15 +173,15 @@ http.createServer(function(request, response) {
                                 console.log(info.tracks.items[0].album.images[0].url);
                                 req(info.tracks.items[0].album.images[0].url).pipe(fs.createWriteStream('imageFiles/' + videoId + '.jpg'));
                                 metadata = {
-                                    videoId: videoId,
                                     title: info.tracks.items[0].name,
                                     artist: info.tracks.items[0].artists[0].name,
+                                    album: info.tracks.items[0].album.name,
                                     artwork: 'imageFiles/' + videoId + '.jpg'
                                 };
 
 
                                 if (fileConverted) {
-                                    addMetaData(metadata, function() {
+                                    addMetaData(videoId, metadata, function() {
                                         sendAudioFile(videoId, response);
                                     });
                                 }
@@ -202,12 +190,11 @@ http.createServer(function(request, response) {
                                 //we couldn't find metadata for the track :'( 
                                 console.log("Couldn't get any tracks from spotify!");
                                 metadata = {
-                                    videoId: videoId,
                                     title: songs[0].title
                                 };
 
                                 if (fileConverted) {
-                                    addMetaData(metadata, function() {
+                                    addMetaData(videoId, metadata, function() {
                                         sendAudioFile(videoId, response);
                                     });
                                 }
@@ -216,12 +203,11 @@ http.createServer(function(request, response) {
                         } else {
                             trackDataRetrieved = true;
                             metadata = {
-                                videoId: videoId,
                                 title: songs[0].title
                             };
 
                             if (fileConverted) {
-                                addMetaData(metadata, function() {
+                                addMetaData(videoId, metadata, function() {
                                     sendAudioFile(videoId, response);
                                 });
                             }
@@ -232,12 +218,11 @@ http.createServer(function(request, response) {
 
                     trackDataRetrieved = true;
                     metadata = {
-                        videoId: videoId,
                         title: info.title
                     };
 
                     if (fileConverted) {
-                        addMetaData(metadata, function() {
+                        addMetaData(videoId, metadata, function() {
                             sendAudioFile(videoId, response);
                         });
                     }
