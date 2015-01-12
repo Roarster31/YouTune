@@ -13,22 +13,22 @@ var DEBUG = false;
 
 var filesArray = [];
 
-fs.exists('/audioFiles', function (exists) {
-  if(exists){
-    console.log("exists");
-    populateFileArray();
-  }else{
-    fs.mkdir('audioFiles', populateFileArray);
-    fs.mkdir('imageFiles', function(){});
-  }
+fs.exists('/audioFiles', function(exists) {
+    if (exists) {
+        console.log("exists");
+        populateFileArray();
+    } else {
+        fs.mkdir('audioFiles', populateFileArray);
+        fs.mkdir('imageFiles', function() {});
+    }
 });
 
-function populateFileArray () {
-//we need to populate the files array with all existing files, we'll do this asynchonously
-fs.readdir("audioFiles/", function(err, files) {
-    filesArray = filesArray.concat(files);
-    console.log(filesArray);
-});
+function populateFileArray() {
+    //we need to populate the files array with all existing files, we'll do this asynchonously
+    fs.readdir("audioFiles/", function(err, files) {
+        filesArray = filesArray.concat(files);
+        console.log(filesArray);
+    });
 }
 
 function sendAudioFile(videoId, response) {
@@ -54,13 +54,28 @@ function addMetaData(metadata, callback) {
     console.log(metadata);
 
     var options = {
-        attachments: [metadata.artwork]
-    };
+            attachments: [metadata.artwork]
+        };
 
-    var data = {
-        title: metadata.title,
-        artist: metadata.artist
-    };
+        
+
+
+    var data;
+
+    if (metadata.artist) {
+        data = {
+            title: metadata.title,
+            artist: metadata.artist
+
+        };
+    } else {
+        data = {
+            title: metadata.title
+        };
+    }
+
+
+    if (metadata.artwork) {
 
     ffmetadata.write('audioFiles/' + metadata.videoId + '.mp3', data, options, function(err) {
         if (err) {
@@ -71,6 +86,20 @@ function addMetaData(metadata, callback) {
 
         }
     });
+
+    }else{
+
+        ffmetadata.write('audioFiles/' + metadata.videoId + '.mp3', data, function(err) {
+        if (err) {
+            console.error("Error writing cover art");
+        } else {
+            console.log('artwork added');
+            callback();
+
+        }
+    });
+
+    }
 
 }
 
@@ -84,7 +113,7 @@ http.createServer(function(request, response) {
         return;
     }
 
-    if(DEBUG){
+    if (DEBUG) {
         videoId = "debug";
     }
 
@@ -136,37 +165,86 @@ http.createServer(function(request, response) {
 
             console.log("searching spotify for: " + info.title);
 
-            req('https://api.spotify.com/v1/search?type=track&limit=1&q=' + encodeURIComponent(info.title), function(error, response, body) {
+            req('http://developer.echonest.com/api/v4/song/search?api_key=7WFN0LV9VZMGAFZFQ&combined=' + encodeURIComponent(info.title), function(error, response, body) {
                 if (!error && response.statusCode == 200) {
-                    console.log("received spotify data");
-                    var info = JSON.parse(body);
-                    if (info.tracks.total > 0) {
-                        console.log("Found tracks from spotify!");
-                        console.log(info.tracks.items[0].album.images[0].url);
-                        req(info.tracks.items[0].album.images[0].url).pipe(fs.createWriteStream('imageFiles/' + videoId + '.jpg'));
-                        metadata = {
-                            videoId: videoId,
-                            title: info.tracks.items[0].name,
-                            artist: info.tracks.items[0].artists[0].name,
-                            artwork: 'imageFiles/' + videoId + '.jpg'
-                        };
-                        trackDataRetrieved = true;
 
-                        if (fileConverted)
-                            addMetaData(metadata, function() {
-                                sendAudioFile(videoId, response);
-                            });
-                        //we're now good to begin converting
-                    } else {
-                        //we couldn't find metadata for the track :'( 
-                        console.log("Couldn't get any tracks from spotify!");
+                    var songs = JSON.parse(body).response.songs;
 
+                    if (!songs) {
+                        console.log("Couldn't get any tracks from Echo Nest!");
+                        return;
                     }
 
+                    req('https://api.spotify.com/v1/search?type=track&limit=1&q=' + encodeURIComponent(songs[0].title), function(error, response, body) {
+                        if (!error && response.statusCode == 200) {
+                            console.log("received spotify data");
+                            var info = JSON.parse(body);
+                            trackDataRetrieved = true;
+                            if (info.tracks.length > 0) {
+                                console.log("Found tracks from spotify!");
+                                console.log(info.tracks.items[0].album.images[0].url);
+                                req(info.tracks.items[0].album.images[0].url).pipe(fs.createWriteStream('imageFiles/' + videoId + '.jpg'));
+                                metadata = {
+                                    videoId: videoId,
+                                    title: info.tracks.items[0].name,
+                                    artist: info.tracks.items[0].artists[0].name,
+                                    artwork: 'imageFiles/' + videoId + '.jpg'
+                                };
+
+
+                                if (fileConverted) {
+                                    addMetaData(metadata, function() {
+                                        sendAudioFile(videoId, response);
+                                    });
+                                }
+                                //we're now good to begin converting
+                            } else {
+                                //we couldn't find metadata for the track :'( 
+                                console.log("Couldn't get any tracks from spotify!");
+                                metadata = {
+                                    videoId: videoId,
+                                    title: songs[0].title
+                                };
+
+                                if (fileConverted) {
+                                    addMetaData(metadata, function() {
+                                        sendAudioFile(videoId, response);
+                                    });
+                                }
+                            }
+
+                        } else {
+                            trackDataRetrieved = true;
+                            metadata = {
+                                videoId: videoId,
+                                title: songs[0].title
+                            };
+
+                            if (fileConverted) {
+                                addMetaData(metadata, function() {
+                                    sendAudioFile(videoId, response);
+                                });
+                            }
+                            console.log("Spotify Error");
+                        }
+                    });
                 } else {
-                    console.log("Spotify Error");
+
+                    trackDataRetrieved = true;
+                    metadata = {
+                        videoId: videoId,
+                        title: info.title
+                    };
+
+                    if (fileConverted) {
+                        addMetaData(metadata, function() {
+                            sendAudioFile(videoId, response);
+                        });
+                    }
+
+                    console.log("Echo nest Error");
                 }
-            })
+            });
 
         };
 
@@ -205,7 +283,7 @@ http.createServer(function(request, response) {
             console.log('file converted');
             fileConverted = true;
 
-            filesArray.push(videoId+".mp3");
+            filesArray.push(videoId + ".mp3");
 
             if (trackDataRetrieved)
                 addMetaData(metadata, function() {
