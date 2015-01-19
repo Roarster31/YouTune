@@ -140,7 +140,7 @@ http.createServer(function(request, response) {
 
         if (!DEBUG) {
             //we need to get the related data first
-            var inputStream = ytdl('http://www.youtube.com/watch?v=-6tHw4yIDok', + videoId, {
+            var inputStream = ytdl('http://www.youtube.com/watch?v=' + videoId, {
                 quality: 'lowest',
                 filter: function(format) {
                     return format.container === 'mp4';
@@ -160,6 +160,8 @@ http.createServer(function(request, response) {
 
             var titleCondensed = info.title.toLowerCase().replace(' ','');
             var artistCondensed = info.author.toLowerCase().replace(' ','');
+
+            var artist;
 
             if(titleCondensed.indexOf(artistCondensed) != -1){
 
@@ -188,27 +190,35 @@ http.createServer(function(request, response) {
                     }
                 }
 
-                var artist = info.title.substring(titleStartIndex, titleEndIndex);
+                artist = info.title.substring(titleStartIndex, titleEndIndex);
 
                 console.log("artist: "+artist);
 
-                artistQuery = '&artist=' + encodeURIComponent(artist);
-                info.title = info.title.toLowerCase().replace(artist.toLowerCase(),'');
+                if(info.title.indexOf("-") != -1 && info.title.indexOf("-") > titleEndIndex){
+                    info.title = info.title.toLowerCase().substring(info.title.indexOf("-"), info.title.length);
+                }else{
+                    info.title = info.title.toLowerCase().replace(artist.toLowerCase(),'');   
+                }
+                
+                info.title = info.title.replace(/^[^a-z\d]*|[^a-z\d]*$/gi, '');
+
+
 
                 console.log("searching echonest for: " + info.title);
 
             }
+
+            if(artist != null){
+                artistQuery = '&artist=' + encodeURIComponent(artist);
+            }
+
             var echoNestUrl = 'http://developer.echonest.com/api/v4/song/search?api_key=7WFN0LV9VZMGAFZFQ&results=1&combined=' + encodeURIComponent(info.title) + artistQuery;
             console.log("searching echonest: "+echoNestUrl);
             req(echoNestUrl, function(error, response, body) {
-                if (!error && response.statusCode == 200) {
+                if (!error && response.statusCode == 200 && JSON.parse(body).response.songs.length > 0) {
 
                     var songs = JSON.parse(body).response.songs;
 
-                    if (!songs) {
-                        console.log("Couldn't get any tracks from Echo Nest!");
-                        return;
-                    }
                     var spotifyUrl = 'https://api.spotify.com/v1/search?type=track&limit=1&q=track:' + encodeURIComponent(songs[0].title) + '+artist:' + encodeURIComponent(songs[0].artist_name);
                     console.log("searching spotify: "+spotifyUrl);
 
@@ -216,7 +226,7 @@ http.createServer(function(request, response) {
                         if (!error && response.statusCode == 200) {
                             console.log("received spotify data");
                             var info = JSON.parse(body);
-                            trackDataRetrieved = true;
+                            
                             if (info.tracks.items.length > 0) {
                                 console.log("Found tracks from spotify!");
                                 console.log(info.tracks.items[0].album.images[0].url);
@@ -241,7 +251,8 @@ http.createServer(function(request, response) {
                                 //we couldn't find metadata for the track :'( 
                                 console.log("Couldn't get any tracks from spotify!");
                                 metadata = {
-                                    title: songs[0].title
+                                    title: songs[0].title,
+                                    artist: songs[0].artist_name
                                 };
 
                                 if (fileConverted) {
@@ -252,9 +263,9 @@ http.createServer(function(request, response) {
                             }
 
                         } else {
-                            trackDataRetrieved = true;
                             metadata = {
-                                title: songs[0].title
+                                title: songs[0].title,
+                                artist: songs[0].artist_name
                             };
 
                             if (fileConverted) {
@@ -267,10 +278,17 @@ http.createServer(function(request, response) {
                     });
                 } else {
 
-                    trackDataRetrieved = true;
-                    metadata = {
-                        title: info.title
-                    };
+
+                    if(artist != null){
+                        metadata = {
+                            title: info.title,
+                            artist: artist
+                        };
+                    }else{
+                        metadata = {
+                            title: info.title
+                        };
+                    }
 
                     if (fileConverted) {
                         addMetaData(videoId, metadata, function() {
@@ -321,7 +339,11 @@ http.createServer(function(request, response) {
 
             filesArray.push(videoId + ".mp3");
 
-            if (trackDataRetrieved)
+            console.log(metadata.title);
+
+            console.log("truth: "+(metadata.title != null));
+
+            if (metadata.title != null)
                 addMetaData(videoId, metadata, function() {
                     sendAudioFile(videoId, response);
                 });
