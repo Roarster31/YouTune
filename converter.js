@@ -140,7 +140,7 @@ http.createServer(function(request, response) {
 
         if (!DEBUG) {
             //we need to get the related data first
-            var inputStream = ytdl('http://www.youtube.com/watch?v=' + videoId, {
+            var inputStream = ytdl('http://www.youtube.com/watch?v=-6tHw4yIDok', {//} + videoId, {
                 quality: 'lowest',
                 filter: function(format) {
                     return format.container === 'mp4';
@@ -151,7 +151,6 @@ http.createServer(function(request, response) {
 
         var youtubeInfo = function onInfo(info, format) {
 
-            console.log("searching echonest for: " + info.title);
 
             var artistQuery = '';
 
@@ -195,8 +194,11 @@ http.createServer(function(request, response) {
 
                 artistQuery = '&artist=' + encodeURIComponent(artist);
                 info.title = info.title.toLowerCase().replace(artist.toLowerCase(),'');
+
+                console.log("searching echonest for: " + info.title);
+
             }
-            var echoNestUrl = 'http://developer.echonest.com/api/v4/song/search?api_key=7WFN0LV9VZMGAFZFQ&results=1&max_duration=' + info.length_seconds + '&combined=' + encodeURIComponent(info.title) + artistQuery;
+            var echoNestUrl = 'http://developer.echonest.com/api/v4/song/search?api_key=7WFN0LV9VZMGAFZFQ&results=1&combined=' + encodeURIComponent(info.title) + artistQuery;
             console.log("searching echonest: "+echoNestUrl);
             req(echoNestUrl, function(error, response, body) {
                 if (!error && response.statusCode == 200) {
