@@ -159,7 +159,7 @@ function getWriteArgs(src, dst, data, options) {
 		args.push("-id3v2_version", "3");
 	}
 
-	args.push("-write_id3v1", "1");
+	// args.push("-write_id3v1", "1");
 
 	// append metadata
 	Object.keys(data).forEach(function(name) {

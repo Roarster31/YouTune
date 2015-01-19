@@ -140,7 +140,7 @@ http.createServer(function(request, response) {
 
         if (!DEBUG) {
             //we need to get the related data first
-            var inputStream = ytdl('http://www.youtube.com/watch?v=-6tHw4yIDok', {//} + videoId, {
+            var inputStream = ytdl('http://www.youtube.com/watch?v=-6tHw4yIDok', + videoId, {
                 quality: 'lowest',
                 filter: function(format) {
                     return format.container === 'mp4';
