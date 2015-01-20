@@ -2,16 +2,19 @@ var fs = require("fs");
 var ytdl = require("ytdl-core");
 var ffmpeg = require('fluent-ffmpeg');
 var path = require('path');
-var http = require("http");
-var url = require("url");
 var req = require('request');
+var events = require('events');
 var ffmetadata = require('./metadata');
 
-
+var readyCallback;
 
 var DEBUG = false;
 
 var filesArray = [];
+
+exports.setReadyCallback = function (callback){
+    readyCallback = callback;
+}
 
 fs.exists('/audioFiles', function(exists) {
     if (exists) {
@@ -21,6 +24,7 @@ fs.exists('/audioFiles', function(exists) {
         fs.mkdir('audioFiles', populateFileArray);
         fs.mkdir('imageFiles', function() {});
     }
+    
 });
 
 function populateFileArray() {
@@ -28,26 +32,15 @@ function populateFileArray() {
     fs.readdir("audioFiles/", function(err, files) {
         filesArray = filesArray.concat(files);
         console.log(filesArray);
+
+        console.log("converter ready");
+        if(readyCallback != null){
+            readyCallback();
+        }
     });
 }
 
-function sendAudioFile(videoId, response) {
 
-    var filePath = path.join(__dirname, "audioFiles/" + videoId + ".mp3");
-
-    var stat = fs.statSync(filePath);
-
-    response.writeHead(200, {
-        'Content-Type': 'audio/mpeg',
-        'Content-Length': stat.size
-    });
-
-    var readStream = fs.createReadStream(filePath);
-
-    readStream.pipe(response);
-    console.log("response sent");
-
-}
 
 function addMetaData(videoId, metadata, callback) {
     console.log("adding meta data");
@@ -92,12 +85,12 @@ function addMetaData(videoId, metadata, callback) {
 }
 
 
-http.createServer(function(request, response) {
 
-    var videoId = url.parse(request.url).query;
+
+exports.processVideoId = function (videoId, callback){
 
     if (videoId == null) {
-        response.end();
+        callback("No videoId");
         return;
     }
 
@@ -123,8 +116,7 @@ http.createServer(function(request, response) {
     //if we already have the file we'll just send it
     if (fileExists) {
         console.log("file " + videoId + ".mp3 already converted");
-
-        sendAudioFile(videoId, response);
+        callback(null);
 
     } else {
         console.log("preparing to download " + videoId + ".mp3");
@@ -243,7 +235,7 @@ http.createServer(function(request, response) {
 
                                 if (fileConverted) {
                                     addMetaData(videoId, metadata, function() {
-                                        sendAudioFile(videoId, response);
+                                        callback(null);
                                     });
                                 }
                                 //we're now good to begin converting
@@ -257,7 +249,7 @@ http.createServer(function(request, response) {
 
                                 if (fileConverted) {
                                     addMetaData(videoId, metadata, function() {
-                                        sendAudioFile(videoId, response);
+                                        callback(null);
                                     });
                                 }
                             }
@@ -270,7 +262,7 @@ http.createServer(function(request, response) {
 
                             if (fileConverted) {
                                 addMetaData(videoId, metadata, function() {
-                                    sendAudioFile(videoId, response);
+                                    callback(null);
                                 });
                             }
                             console.log("Spotify Error");
@@ -292,7 +284,7 @@ http.createServer(function(request, response) {
 
                     if (fileConverted) {
                         addMetaData(videoId, metadata, function() {
-                            sendAudioFile(videoId, response);
+                            callback(null);
                         });
                     }
 
@@ -345,7 +337,7 @@ http.createServer(function(request, response) {
 
             if (metadata.title != null)
                 addMetaData(videoId, metadata, function() {
-                    sendAudioFile(videoId, response);
+                    callback(null);
                 });
 
         });
@@ -353,6 +345,5 @@ http.createServer(function(request, response) {
 
     }
 
+}
 
-
-}).listen(8050);
