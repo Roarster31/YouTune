@@ -133,7 +133,7 @@ exports.processVideoId = function (videoId, callback){
         if (!DEBUG) {
             //we need to get the related data first
             var inputStream = ytdl('http://www.youtube.com/watch?v=' + videoId, {
-                quality: 'lowest',
+                quality: 'highest',
                 filter: function(format) {
                     return format.container === 'mp4';
                 }
@@ -142,6 +142,7 @@ exports.processVideoId = function (videoId, callback){
 
 
         var youtubeInfo = function onInfo(info, format) {
+
 
 
             var artistQuery = '';
@@ -312,6 +313,7 @@ exports.processVideoId = function (videoId, callback){
         }
         transcoder
             .noVideo()
+            .audioBitrate(320)
             .save('audioFiles/' + videoId + '.mp3');
 
         transcoder.on('start', function(commandLine) {
