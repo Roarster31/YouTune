@@ -23,3 +23,13 @@ The server by default runs on port 8050. The server accepts calls on this port a
 http://localhost:8050?HeK1zQFJtXE fetches the YouTube video at http://www.youtube.com/watch?v=HeK1zQFJtXE
 
 The server downloads the video and strips out the video stream leaving the audio stream intact while querying the spotify api for info about the music. It then writes the metadata to the music and returns it to the caller of the url request.
+
+#### Commandline Usage
+
+You can also run the app without running a webserver. Just use
+
+```sh
+$ node commandline.js HeK1zQFJtXE
+```
+
+which will generate a new audio file in `/audiofiles` with the id 'HeK1zQFJtXE'.
