@@ -4,7 +4,13 @@ YouTune is a Node.js server that converts YouTube videos to mp3 files. Together 
 
 ### Usage
 
-Usage is pretty straight forward.
+Make sure you've installed the requirements.
+
+```sh
+$ npm install
+```
+
+Then usage is pretty straight forward.
 
 ```sh
 $ node converter.js
