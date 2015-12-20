@@ -1,0 +1,29 @@
+{
+  "name": "youtune",
+  "version": "1.0.0",
+  "description": "A Node.js server that converts YouTube videos to mp3 files",
+  "main": "commandline.js",
+  "dependencies": {
+    "concat-stream": "^1.5.1",
+    "fluent-ffmpeg": "^2.0.1",
+    "stream-combiner": "^0.2.2",
+    "split": "^1.0.0",
+    "stream-filter": "^1.0.0",
+    "through": "^2.3.8",
+    "ytdl-core": "^0.7.9"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Roarster31/YouTune.git"
+  },
+  "author": "Rory Smith",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Roarster31/YouTune/issues"
+  },
+  "homepage": "https://github.com/Roarster31/YouTune#readme"
+}
